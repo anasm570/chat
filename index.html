@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 بوت البحث الذكي (Wikipedia)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Cairo', Tahoma, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 950px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            border: 1px solid #ffcc88;
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 20px;
+            text-align: center;
+            background: #1e2a32aa;
+            border-bottom: 1px solid #ffcc88;
+        }
+        .chat-header h1 {
+            color: #ffdd99;
+        }
+        .chat-header p {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 28px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .user {
+            background: #2563eb;
+            color: white;
+            align-self: flex-end;
+            border-bottom-left-radius: 8px;
+        }
+        .bot {
+            background: #1e293b;
+            color: #e2e8f0;
+            align-self: flex-start;
+            border-bottom-right-radius: 8px;
+            border: 1px solid #475569;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: #1e2a32aa;
+            gap: 12px;
+            border-top: 1px solid #ffcc88;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            background: #f97316;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .footer-note {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.7rem;
+            color: #88aacc;
+            border-top: 1px solid #334155;
+        }
+        .typing {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        <h1>🔍 بوت البحث الذكي</h1>
+        <p>يبحث في ويكيبيديا ليجيب على أسئلتك – إجابات دقيقة وليست عشوائية</p>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="message bot">مرحباً! أنا بوت يعتمد على البحث في ويكيبيديا. اسألني أي شيء، وسأبحث لك عن إجابة موثوقة.</div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="اكتب سؤالك هنا... مثال: من هو أينشتاين؟">
+        <button id="sendBtn">إرسال</button>
+    </div>
+    <div class="footer-note">⚡ يعمل عبر Wikipedia API – بحث حقيقي، ردود غير عشوائية</div>
+</div>
+
+<script>
+    const chatDiv = document.getElementById('chatMessages');
+    const inputField = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', sender);
+        msgDiv.innerText = text;
+        chatDiv.appendChild(msgDiv);
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    async function searchWikipedia(query) {
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            if (!response.ok) throw new Error('فشل البحث');
+            const data = await response.json();
+            return data.answer;
+        } catch (error) {
+            console.error(error);
+            return "عذراً، حدث خطأ في البحث. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.";
+        }
+    }
+
+    async function handleUserInput() {
+        let userText = inputField.value.trim();
+        if (!userText) return;
+        addMessage(userText, 'user');
+        inputField.value = '';
+
+        const typingMsg = document.createElement('div');
+        typingMsg.classList.add('message', 'bot', 'typing');
+        typingMsg.innerText = '🔍 جاري البحث عن إجابة...';
+        chatDiv.appendChild(typingMsg);
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+
+        const answer = await searchWikipedia(userText);
+        typingMsg.remove();
+        addMessage(answer, 'bot');
+    }
+
+    sendBtn.addEventListener('click', handleUserInput);
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleUserInput();
+    });
+</script>
+</body>
+</html>
