@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بوت البحث</title>
+    <style>
+        body { background:#0f172a; font-family:sans-serif; color:white; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+        .chat { width:500px; background:#1e293b; border-radius:24px; padding:20px; }
+        #msgs { height:400px; overflow-y:auto; margin-bottom:10px; }
+        .user { text-align:right; color:#a5f3fc; margin:5px; }
+        .bot { text-align:left; color:#facc15; margin:5px; }
+        input, button { padding:10px; border-radius:40px; border:none; }
+        input { width:75%; background:#0f172a; color:white; }
+        button { width:20%; background:#f97316; cursor:pointer; }
+    </style>
+</head>
+<body>
+<div class="chat">
+    <h3>🔍 بوت Google + Wikipedia</h3>
+    <div id="msgs"><div class="bot">مرحباً! اسألني أي شيء.</div></div>
+    <input type="text" id="question" placeholder="اكتب سؤالك...">
+    <button onclick="ask()">أرسل</button>
+</div>
+<script>
+    async function ask() {
+        let q = document.getElementById('question').value.trim();
+        if (!q) return;
+        let msgs = document.getElementById('msgs');
+        msgs.innerHTML += `<div class="user">${q}</div>`;
+        document.getElementById('question').value = '';
+        msgs.innerHTML += `<div class="bot">🔍 جاري البحث...</div>`;
+        try {
+            let res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+            let data = await res.json();
+            let answer = data.answer || 'لم أجد إجابة.';
+            msgs.lastChild.remove();
+            msgs.innerHTML += `<div class="bot">${answer}</div>`;
+        } catch(e) {
+            msgs.lastChild.remove();
+            msgs.innerHTML += `<div class="bot">⚠️ خطأ في الخادم.</div>`;
+        }
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+</script>
+</body>
+</html>
